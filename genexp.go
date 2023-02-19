@@ -33,6 +33,6 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	for i := 0; i < n; i++ {
-		fmt.Printf("%f\n", rand.NormFloat64()*desiredMean)
+		fmt.Printf("%f\n", rand.ExpFloat64()*desiredMean)
 	}
 }
