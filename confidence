@@ -1,15 +1,21 @@
 #!/bin/bash
 set -eou pipefail
 
-INFILE=$1
-N=1
-Z=1.960
+INFILE=$1 # data set
+Z=1.960   # 95% confidence interval
+N=100     # 100 samples of the data set
 
+I=1
+
+# calculate mean of the entire population
 datamash count 1 mean 1 sstdev 1 < $INFILE | while read ACTUALCOUNT ACTUALMEAN ACTUALSTDDEV
 do
-	while (( N <= 100 ))
+	# Run the procedure 100 times
+	while (( I <= 100 ))
 	do
-		reservoir 100 < $INFILE | datamash count 1 mean 1 sstdev 1 |
+		# Take $N samples, calculate the interval, see if the known mean
+		# fits in the interval
+		reservoir $N < $INFILE | datamash count 1 mean 1 sstdev 1 |
 			awk -v actual=$ACTUALMEAN -v Z=$Z '
 					{ count=$1; mean=$2; stddev=$3;}
 					END {
@@ -20,6 +26,8 @@ do
 					if (min < actual && actual < max) { phrase = "IN" }
 					printf "%f\t%f\t%f\t%s\n", min, actual, max, phrase;
 			}'
-		(( N = N + 1 ))
-	done | sort -k4.1  | tee /dev/tty | grep -c OUT
+		(( I = I + 1 ))
+	done | sort -k4.1  | tee /dev/tty | grep -c IN
+	# Count the number of times the known mean lies within the interval.
+	# Should be at least 95, but sometimes the count is larger.
 done
