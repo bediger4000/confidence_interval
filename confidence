@@ -1,0 +1,25 @@
+#!/bin/bash
+set -eou pipefail
+
+INFILE=$1
+N=1
+Z=1.960
+
+datamash count 1 mean 1 sstdev 1 < $INFILE | while read ACTUALCOUNT ACTUALMEAN ACTUALSTDDEV
+do
+	while (( N <= 100 ))
+	do
+		reservoir 100 < $INFILE | datamash count 1 mean 1 sstdev 1 |
+			awk -v actual=$ACTUALMEAN -v Z=$Z '
+					{ count=$1; mean=$2; stddev=$3;}
+					END {
+					interval=Z*stddev/sqrt(count);
+					min=mean-interval;
+					max=mean+interval;
+					phrase="OUT";
+					if (min < actual && actual < max) { phrase = "IN" }
+					printf "%f\t%f\t%f\t%s\n", min, actual, max, phrase;
+			}'
+		(( N = N + 1 ))
+	done | sort -k4.1  | tee /dev/tty | grep -c OUT
+done
