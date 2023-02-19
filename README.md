@@ -43,7 +43,7 @@ fits in the confidence interval.
 If we do that 100 times, the count of times that the known mean fits in
 the interval calculated from the samples should be the confidence interval.
 
-## script `confidence`
+### script `confidence`
 
 The script `confidence` does exactly that.
 It finds the mean value of the data set,
